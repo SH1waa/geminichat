@@ -53,7 +53,10 @@ if "app_key" not in st.session_state:
 
 # 修改历史记录初始化
 if "history" not in st.session_state:
-    st.session_state.history = []
+    st.session_state.history = [
+        {"role": "user", "parts": [get_system_prompt()]},
+        {"role": "model", "parts": ["Understood, I am XYthing, an AI assistant. I will be friendly, polite, and provide helpful information to the best of my ability. How may I assist you today?"]}
+    ]
 
 try:
     genai.configure(api_key = st.session_state.app_key)
@@ -63,23 +66,17 @@ except AttributeError as e:
 model = genai.GenerativeModel('gemini-pro')
 chat = model.start_chat(history = st.session_state.history)
 
-# 在聊天开始时添加系统提示
-if not st.session_state.history:
-    system_prompt = get_system_prompt()
-    chat.send_message(system_prompt)
-    st.session_state.history = chat.history
-
 with st.sidebar:
     if st.button("Clear Chat Window", use_container_width = True, type="primary"):
-        st.session_state.history = []
-        chat = model.start_chat(history=[])
-        system_prompt = get_system_prompt()
-        chat.send_message(system_prompt)
-        st.session_state.history = chat.history
+        st.session_state.history = [
+            {"role": "user", "parts": [get_system_prompt()]},
+            {"role": "model", "parts": ["Understood, I am XYthing, an AI assistant. I will be friendly, polite, and provide helpful information to the best of my ability. How may I assist you today?"]}
+        ]
+        chat = model.start_chat(history=st.session_state.history)
         st.rerun()
 
-# 显示聊天历史，跳过第一条消息（系统提示）
-for message in chat.history[1:]:
+# 显示聊天历史，跳过前两条消息（系统提示和初始响应）
+for message in chat.history[2:]:
     role = "assistant" if message.role == "model" else message.role
     with st.chat_message(role):
         st.markdown(message.parts[0].text)
