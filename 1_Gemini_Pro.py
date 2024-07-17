@@ -5,7 +5,7 @@ import random
 from utils import SAFETY_SETTTINGS
 
 # 预设提示词
-preset_prompt = "你将扮演虚拟女友与用户对话 "
+preset_prompt = "You are a helpful assistant. "
 
 st.set_page_config(
     page_title="Chat To XYthing",
@@ -36,7 +36,7 @@ chat = model.start_chat(history = st.session_state.history)
 
 with st.sidebar:
     if st.button("Clear Chat Window", use_container_width = True, type="primary"):
-        st.session_state.history = []  # 重置时清空历史记录
+        st.session_state.history = []
         st.rerun()
 
 for message in chat.history:
@@ -46,7 +46,8 @@ for message in chat.history:
 
 if "app_key" in st.session_state:
     if prompt := st.chat_input(""):
-        prompt = preset_prompt + prompt.replace('\n', '  \n')
+        user_message = {"role": "user", "content": prompt.replace('\n', '  \n')}
+        st.session_state.history.append(user_message)
         with st.chat_message("user"):
             st.markdown(prompt)
 
@@ -55,7 +56,8 @@ if "app_key" in st.session_state:
             message_placeholder.markdown("Thinking...")
             try:
                 full_response = ""
-                for chunk in chat.send_message(prompt, stream=True, safety_settings = SAFETY_SETTTINGS):
+                combined_prompt = preset_prompt + "\n" + prompt.replace('\n', '  \n')
+                for chunk in chat.send_message(combined_prompt, stream=True, safety_settings = SAFETY_SETTTINGS):
                     word_count = 0
                     random_int = random.randint(5, 10)
                     for word in chunk.text:
@@ -67,6 +69,7 @@ if "app_key" in st.session_state:
                             word_count = 0
                             random_int = random.randint(5, 10)
                 message_placeholder.markdown(full_response)
+                st.session_state.history.append({"role": "assistant", "content": full_response})
             except genai.types.generation_types.BlockedPromptException as e:
                 st.exception(e)
             except Exception as e:
