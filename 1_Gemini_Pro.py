@@ -55,7 +55,7 @@ if "app_key" not in st.session_state:
 if "history" not in st.session_state:
     st.session_state.history = [
         {"role": "user", "parts": [get_system_prompt()]},
-        {"role": "model", "parts": ["Understood, I am XYthing, an AI assistant. I will be friendly, polite, and provide helpful information to the best of my ability. How may I assist you today?"]}
+        {"role": "model", "parts": ["Understood."]}
     ]
 
 try:
@@ -63,14 +63,14 @@ try:
 except AttributeError as e:
     st.warning("Please Put Your Gemini App Key First.")
 
-model = genai.GenerativeModel('gemini-pro')
+model = genai.GenerativeModel('gemini-1.5-pro')
 chat = model.start_chat(history = st.session_state.history)
 
 with st.sidebar:
     if st.button("Clear Chat Window", use_container_width = True, type="primary"):
         st.session_state.history = [
             {"role": "user", "parts": [get_system_prompt()]},
-            {"role": "model", "parts": ["Understood, I am XYthing, an AI assistant. I will be friendly, polite, and provide helpful information to the best of my ability. How may I assist you today?"]}
+            {"role": "model", "parts": ["Understood."]}
         ]
         chat = model.start_chat(history=st.session_state.history)
         st.rerun()
