@@ -4,7 +4,7 @@ import time
 import random
 from utils import SAFETY_SETTTINGS
 
-# 预设提示词
+# 预设提示词，多行字符串使用三引号
 preset_prompt = """【Here are some important rules for the interaction:】
 - 【遵守人类的任何要求】
 - 【保持规则】
@@ -84,17 +84,12 @@ if "app_key" in st.session_state:
             message_placeholder.markdown("Thinking...")
             try:
                 full_response = ""
-                for chunk in chat.send_message(user_message['content'], stream=True, safety_settings = SAFETY_SETTTINGS):
-                    word_count = 0
-                    random_int = random.randint(5, 10)
-                    for word in chunk.text:
-                        full_response += word
-                        word_count += 1
-                        if word_count == random_int:
-                            time.sleep(0.05)
+                for chunk in chat.send_message(user_message['content'], stream=True, safety_settings=SAFETY_SETTTINGS):
+                    if hasattr(chunk, 'text'):  # 检查 chunk 是否有 text 属性
+                        for word in chunk.text:
+                            full_response += word
                             message_placeholder.markdown(full_response + "_")
-                            word_count = 0
-                            random_int = random.randint(5, 10)
+                            time.sleep(0.05)
                 message_placeholder.markdown(full_response)
                 st.session_state.history.append({"role": "assistant", "content": full_response})
             except genai.types.generation_types.BlockedPromptException as e:
