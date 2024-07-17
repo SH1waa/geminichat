@@ -91,9 +91,16 @@ if "app_key" in st.session_state:
             try:
                 full_response = ""
                 for chunk in st.session_state.chat.send_message(f"{SYSTEM_PROMPT}\n\nUser: {prompt}", stream=True, safety_settings=SAFETY_SETTTINGS):
+                    if hasattr(chunk, 'text'):
+                        chunk_text = chunk.text
+                    elif hasattr(chunk, 'parts'):
+                        chunk_text = ''.join([part.text for part in chunk.parts if hasattr(part, 'text')])
+                    else:
+                        continue
+
                     word_count = 0
                     random_int = random.randint(5, 10)
-                    for word in chunk.text:
+                    for word in chunk_text:
                         full_response += word
                         word_count += 1
                         if word_count == random_int:
