@@ -60,38 +60,37 @@ except AttributeError as e:
     st.warning("Please Put Your Gemini App Key First.")
 
 model = genai.GenerativeModel('gemini-pro')
-chat = model.start_chat(history = st.session_state.history)
 
-# 如果历史记录为空，则添加系统提示词
-if not st.session_state.history:
-    chat.send_message(SYSTEM_PROMPT)
-    st.session_state.history = chat.history
+def get_chat():
+    chat = model.start_chat(history=[])
+    return chat
+
+if "chat" not in st.session_state:
+    st.session_state.chat = get_chat()
 
 with st.sidebar:
-    if st.button("Clear Chat Window", use_container_width = True, type="primary"):
+    if st.button("Clear Chat Window", use_container_width=True, type="primary"):
         st.session_state.history = []
-        chat = model.start_chat(history = [])
-        chat.send_message(SYSTEM_PROMPT)
-        st.session_state.history = chat.history
+        st.session_state.chat = get_chat()
         st.rerun()
 
-for message in chat.history[1:]:  # 跳过系统提示词
-    role = "assistant" if message.role == "model" else message.role
-    with st.chat_message(role):
-        st.markdown(message.parts[0].text)
+for message in st.session_state.history:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
 
 if "app_key" in st.session_state:
     if prompt := st.chat_input(""):
         prompt = prompt.replace('\n', '  \n')
         with st.chat_message("user"):
             st.markdown(prompt)
+        st.session_state.history.append({"role": "user", "content": prompt})
 
         with st.chat_message("assistant"):
             message_placeholder = st.empty()
             message_placeholder.markdown("Thinking...")
             try:
                 full_response = ""
-                for chunk in chat.send_message(prompt, stream=True, safety_settings = SAFETY_SETTTINGS):
+                for chunk in st.session_state.chat.send_message(f"{SYSTEM_PROMPT}\n\nUser: {prompt}", stream=True, safety_settings=SAFETY_SETTTINGS):
                     word_count = 0
                     random_int = random.randint(5, 10)
                     for word in chunk.text:
@@ -103,8 +102,8 @@ if "app_key" in st.session_state:
                             word_count = 0
                             random_int = random.randint(5, 10)
                 message_placeholder.markdown(full_response)
+                st.session_state.history.append({"role": "assistant", "content": full_response})
             except genai.types.generation_types.BlockedPromptException as e:
                 st.exception(e)
             except Exception as e:
                 st.exception(e)
-            st.session_state.history = chat.history
