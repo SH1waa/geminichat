@@ -91,11 +91,18 @@ if "app_key" in st.session_state:
             try:
                 full_response = ""
                 for chunk in st.session_state.chat.send_message(f"{SYSTEM_PROMPT}\n\nUser: {prompt}", stream=True, safety_settings=SAFETY_SETTTINGS):
+                    # 打印整个chunk以了解其结构
+                    print("Chunk structure:", chunk)
+                    
+                    chunk_text = ""
                     if hasattr(chunk, 'text'):
                         chunk_text = chunk.text
                     elif hasattr(chunk, 'parts'):
-                        chunk_text = ''.join([part.text for part in chunk.parts if hasattr(part, 'text')])
-                    else:
+                        for part in chunk.parts:
+                            if hasattr(part, 'text'):
+                                chunk_text += part.text
+                    
+                    if not chunk_text:
                         continue
 
                     word_count = 0
