@@ -1,11 +1,11 @@
-
-
 import google.generativeai as genai
 import streamlit as st
 import time
 import random
 from utils import SAFETY_SETTTINGS
 
+# 预设提示词
+preset_prompt = "You are a helpful assistant. "
 
 st.set_page_config(
     page_title="Chat To XYthing",
@@ -17,7 +17,6 @@ st.set_page_config(
 
 st.title("Chat To XYthing")
 st.caption("a chatbot, powered by google gemini pro.")
-
 
 if "app_key" not in st.session_state:
     app_key = st.text_input("Your Gemini App Key", type='password')
@@ -37,9 +36,9 @@ chat = model.start_chat(history = st.session_state.history)
 
 with st.sidebar:
     if st.button("Clear Chat Window", use_container_width = True, type="primary"):
-        st.session_state.history = []
+        st.session_state.history = []  # 重置时清空历史记录
         st.rerun()
-    
+
 for message in chat.history:
     role = "assistant" if message.role == "model" else message.role
     with st.chat_message(role):
@@ -47,7 +46,7 @@ for message in chat.history:
 
 if "app_key" in st.session_state:
     if prompt := st.chat_input(""):
-        prompt = prompt.replace('\n', '  \n')
+        prompt = preset_prompt + prompt.replace('\n', '  \n')
         with st.chat_message("user"):
             st.markdown(prompt)
 
