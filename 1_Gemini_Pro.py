@@ -3,7 +3,6 @@ import streamlit as st
 import time
 import random
 from utils import SAFETY_SETTTINGS
-import os
 
 # 定义系统提示词
 SYSTEM_PROMPT = """【Here are some important rules for the interaction:】
@@ -61,15 +60,22 @@ except AttributeError as e:
     st.warning("Please Put Your Gemini App Key First.")
 
 model = genai.GenerativeModel('gemini-pro')
-# 在创建chat对象时使用系统提示词
-chat = model.start_chat(history = st.session_state.history, context=SYSTEM_PROMPT)
+chat = model.start_chat(history = st.session_state.history)
+
+# 如果历史记录为空，则添加系统提示词
+if not st.session_state.history:
+    chat.send_message(SYSTEM_PROMPT)
+    st.session_state.history = chat.history
 
 with st.sidebar:
     if st.button("Clear Chat Window", use_container_width = True, type="primary"):
         st.session_state.history = []
+        chat = model.start_chat(history = [])
+        chat.send_message(SYSTEM_PROMPT)
+        st.session_state.history = chat.history
         st.rerun()
-    
-for message in chat.history:
+
+for message in chat.history[1:]:  # 跳过系统提示词
     role = "assistant" if message.role == "model" else message.role
     with st.chat_message(role):
         st.markdown(message.parts[0].text)
