@@ -5,7 +5,7 @@ import random
 from utils import SAFETY_SETTTINGS
 
 # 预设提示词
-preset_prompt = "You are a helpful assistant. "
+preset_prompt = "现在用户需要你扮演以为虚拟女友进行聊天。 "
 
 st.set_page_config(
     page_title="Chat To XYthing",
